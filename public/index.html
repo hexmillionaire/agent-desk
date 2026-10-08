@@ -14,15 +14,33 @@
   <main>
     <header><div class="breadcrumb">Workspace <span>/</span> Overview</div><div class="header-right"><span id="mode" class="mode">LOCALHOST</span><span class="avatar">A</span></div></header>
     <div class="content">
-      <div class="title-row"><div><div class="eyebrow">A LITTLE CONTEXT. A CLEAR NEXT STEP.</div><h1>Your work, in view<span>.</span></h1><p>Follow each task from the first change to the next handoff.</p></div><button id="refresh" class="refresh">↻ <span>Refresh</span></button></div>
+      <div class="title-row"><div><div class="eyebrow">A LITTLE CONTEXT. A CLEAR NEXT STEP.</div><h1>Your work, in view<span>.</span></h1><p>Follow each task from the first change to the next handoff.</p></div><div class="title-actions"><button id="new-task" class="primary" disabled>+ New task</button><button id="refresh" class="refresh">↻ <span>Refresh</span></button></div></div>
       <div class="metrics"><div><span class="metric-label">TOTAL TASKS</span><strong id="total">—</strong><small>across your repositories</small></div><div><span class="metric-label">IN PROGRESS</span><strong id="working">—</strong><small>working or awaiting review</small></div><div><span class="metric-label">NEEDS ATTENTION</span><strong id="attention" class="amber">—</strong><small>blocked or outside task scope</small></div><div><span class="metric-label">READY FOR HANDOFF</span><strong id="ready" class="mint">—</strong><small>review tasks within scope</small></div></div>
       <section class="workspace-panel"><div class="panel-heading"><div><h2>Task board <span id="task-count">0</span></h2><p>Agent labels and progress come from your task notes.</p></div><label class="search-box"><span>⌕</span><input id="search" type="search" placeholder="Find a task…" aria-label="Search tasks"></label></div>
-        <div class="filters"><div role="group" aria-label="Filter tasks"><button class="filter active" data-filter="all" aria-pressed="true">All tasks</button><button class="filter" data-filter="working" aria-pressed="false">In progress</button><button class="filter" data-filter="attention" aria-pressed="false">Needs attention</button><button class="filter" data-filter="done" aria-pressed="false">Done</button></div><span id="updated">Connecting…</span></div>
+        <div class="filters"><div role="group" aria-label="Filter tasks"><button class="filter active" data-filter="all" aria-pressed="true">All tasks</button><button class="filter" data-filter="working" aria-pressed="false">In progress</button><button class="filter" data-filter="attention" aria-pressed="false">Needs attention</button><button class="filter" data-filter="done" aria-pressed="false">Done</button></div><label class="auto-refresh"><input id="auto-refresh" type="checkbox" checked> Auto-refresh · 10s</label><span id="updated">Connecting…</span></div>
         <div id="notice" role="status" aria-live="polite"></div><div id="board" class="board"></div>
       </section>
       <footer><span><span class="online-dot"></span> Git metadata stays on this machine.</span><span>Scope audits show paths. Run your tests separately.</span></footer>
     </div>
   </main>
-  <dialog id="detail"><div class="dialog-head"><span class="eyebrow">TASK DETAILS</span><button id="close-detail" aria-label="Close task details">×</button></div><h2 id="detail-title"></h2><p id="detail-goal"></p><div id="detail-meta"></div><h3>Changed files</h3><div id="detail-files"></div><h3>Next step</h3><p id="detail-next"></p><div class="dialog-actions"><span id="copy-status" role="status"></span><button id="copy-handoff" class="primary">Copy handoff ↗</button></div></dialog>
+  <dialog id="detail"><div class="dialog-head"><span class="eyebrow">TASK DETAILS</span><button id="close-detail" aria-label="Close task details">×</button></div><h2 id="detail-title"></h2><p id="detail-goal"></p><div id="detail-meta"></div><h3>Changed files</h3><div id="detail-files"></div><h3>Next step</h3><p id="detail-next"></p>
+    <form id="edit-task" class="task-form" hidden>
+      <h3>Update task notes</h3><p>Scope and base stay fixed. Progress and agent labels are your notes.</p>
+      <div class="form-pair"><label>State<select id="edit-state"><option>planned</option><option>working</option><option>blocked</option><option>review</option><option>done</option></select></label><label>Agent label<input id="edit-agent" maxlength="80" required></label></div>
+      <label>Summary<textarea id="edit-summary" maxlength="4000" rows="3"></textarea></label><label>Next step<textarea id="edit-next" maxlength="4000" rows="2"></textarea></label>
+      <div class="form-actions"><span id="edit-status" role="status" aria-live="polite"></span><button id="save-task" class="primary" type="submit">Save notes</button></div>
+    </form>
+    <div class="dialog-actions"><span id="copy-status" role="status"></span><button id="copy-handoff" class="primary">Copy handoff ↗</button></div></dialog>
+  <dialog id="create-dialog"><div class="dialog-head"><span class="eyebrow">START A SCOPED TASK</span><button id="close-create" aria-label="Close new task">×</button></div><h2>What are we working on?</h2><p>Choose a repository and allowed paths. The task captures its current HEAD as the base.</p>
+    <form id="create-task" class="task-form">
+      <label>Repository<select id="create-repository" required></select></label>
+      <div class="form-pair"><label>Task ID<input id="create-id" pattern="[a-z0-9][a-z0-9_-]{0,63}" maxlength="64" placeholder="login-timeout" required></label><label>Agent label<input id="create-agent" maxlength="80" value="unspecified" required></label></div>
+      <label>Goal<textarea id="create-goal" maxlength="4000" rows="2" placeholder="Fix the login timeout" required></textarea></label>
+      <label>Allowed paths · one glob per line<textarea id="create-allow" rows="3" placeholder="src/**&#10;test/**" required></textarea></label>
+      <label>Denied paths · optional, one glob per line<textarea id="create-deny" rows="2" placeholder="src/secrets/**"></textarea></label>
+      <p>Use /, *, **, and ?. Denied paths take priority. Add .agent-lanes/ to this repository’s .gitignore before sharing changes.</p>
+      <div class="form-actions"><span id="create-status" role="status" aria-live="polite"></span><button id="create-submit" class="primary" type="submit">Create task</button></div>
+    </form>
+  </dialog>
   <script src="/app.js" type="module"></script>
 </body></html>

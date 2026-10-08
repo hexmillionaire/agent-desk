@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
 import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { createDesk } from '../src/server.mjs';
 import { repoRoot } from '../vendor/agent-lanes.mjs';
 
 try {
-  const { values } = parseArgs({ strict: true, options: { repo: { type: 'string', multiple: true }, config: { type: 'string' }, port: { type: 'string' }, demo: { type: 'boolean' }, help: { type: 'boolean' } } });
+  const { values } = parseArgs({ strict: true, options: { repo: { type: 'string', multiple: true }, config: { type: 'string' }, port: { type: 'string' }, demo: { type: 'boolean' }, 'read-only': { type: 'boolean' }, help: { type: 'boolean' } } });
   if (values.help) {
-    console.log('Agent Desk: --repo <path> (repeatable), --config <JSON>, --port <number>, --demo\nDefault: serve the current Git repo at http://127.0.0.1:4317\nConfig format: {"repositories":[{"name":"My project","path":"/absolute/path"}]}');
+    console.log('Agent Desk: --repo <path> (repeatable), --config <JSON>, --port <number>, --demo, --read-only\nDefault: manage tasks in the current Git repo at http://127.0.0.1:4317\nOnly task metadata can be written. Use --read-only to disable editing.\nConfig format: {"repositories":[{"name":"My project","path":"/absolute/path"}]}');
   } else {
     if (values.demo && (values.repo || values.config)) throw new Error('--demo cannot be combined with repositories.');
     if (values.repo && values.config) throw new Error('Use --repo or --config, not both.');
@@ -19,11 +20,14 @@ try {
         repositories = config.repositories;
       } else repositories = (values.repo || [process.cwd()]).map(directory => ({ path: directory }));
       if (repositories.length < 1 || repositories.length > 20) throw new Error('Configure 1-20 trusted repositories.');
-      repositories = await Promise.all(repositories.map(async (entry, i) => ({ id: `repo-${i + 1}`, name: String(entry.name || `Repository ${i + 1}`).slice(0, 120), path: await repoRoot(entry.path) })));
+      repositories = await Promise.all(repositories.map(async (entry, i) => {
+        const root = await repoRoot(entry.path);
+        return { id: `repo-${i + 1}`, name: String(entry.name || path.basename(root)).slice(0, 120), path: root };
+      }));
     }
     const port = values.port === undefined ? 4317 : Number(values.port);
     if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('Port must be between 0 and 65535.');
-    const server = createDesk({ repositories, demo: values.demo });
+    const server = createDesk({ repositories, demo: values.demo, readOnly: values['read-only'] });
     server.on('error', error => { console.error(`Agent Desk: ${error.message}`); process.exitCode = 1; });
     server.listen(port, '127.0.0.1', () => console.log(`Agent Desk running at http://127.0.0.1:${server.address().port}${values.demo ? ' (sample data)' : ''}`));
     const stop = () => server.close(() => process.exit());
