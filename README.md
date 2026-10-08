@@ -6,6 +6,8 @@ Works with task files created by [Agent Lanes](https://github.com/hexmillionaire
 
 ![Agent Desk showing explicitly labeled sample tasks](docs/preview.png)
 
+![Editing task notes and exporting a handoff](docs/task-editor.png)
+
 ## Try it
 
 Requires Node.js 24.8+ and Git.
@@ -25,9 +27,11 @@ node bin/agent-desk.mjs --repo /absolute/path/to/project
 node bin/agent-desk.mjs --repo /path/to/api --repo /path/to/cli --port 4317
 ```
 
-Use quoted Windows paths on PowerShell. Create tasks with Agent Lanes first. The empty state explains what to do if no tasks exist. Task cards show progress, agent labels, Git branch, changed-file counts, and scope warnings. Search and filter tasks, select a repository, open a card to inspect changed paths, and copy a freshly generated Markdown handoff. Press Refresh after edits or notes; the dashboard does not poll automatically.
+Use quoted Windows paths on PowerShell. Choose **New task** to set a goal, task ID, and allowed/denied paths, or create tasks with Agent Lanes. Task cards show progress, agent labels, Git branch, changed-file counts, and scope warnings. Open a card to inspect paths, edit notes/status, and copy a fresh handoff. Task scope and the captured base remain fixed. Add `.agent-lanes/` to each repository's `.gitignore` before sharing changes.
 
-Agent labels and progress are manually recorded task metadata. Agent Desk does not inspect Claude/Codex app sessions, show live process status, run agents, edit repositories, verify tests, or infer completion. A `done` task label is not a test result. Shared working trees attribute all changes since each task's base to that task; use separate worktrees for concurrent work.
+The board refreshes every ten seconds while visible. Auto-refresh can be paused. Unsaved notes survive refresh; if another client changed the task, a save returns a conflict and asks you to reopen it. Start with `--read-only` to disable editing. Demo mode always stays read-only.
+
+Agent labels and progress are manually recorded task metadata. Desk writes only `.agent-lanes/` task metadata in configured repositories. It does not inspect Claude/Codex app sessions, show live process status, launch agents, modify source code, verify tests, or infer completion. A `done` label is not a test result. Use separate worktrees for concurrent tasks; each task sees all changes since its base.
 
 ## Named repositories
 
@@ -46,12 +50,12 @@ Then run `node bin/agent-desk.mjs --config desk.config.json`. On Windows JSON pa
 
 ## Local boundaries
 
-The server binds only to `127.0.0.1`. It accepts read-only requests from local hosts, rejects cross-origin requests and unexpected Host headers, exposes only configured repositories, and serves a fixed asset list. All data stays on the machine until you copy or share it. Use only trusted repositories. This is a local developer tool, not a server to expose to the internet or other users. Same-user processes and browser extensions may access localhost; this is not isolation against them.
+The server binds only to `127.0.0.1`, rejects cross-origin requests and unexpected Host headers, exposes only configured repository IDs, and serves a fixed asset list. Writes require a same-origin request and a process-specific session token, are limited to task fields, and enforce a 16 KiB body limit. All data stays local until copied/shared. This is for a trusted single-user machine and trusted repositories. Same-user processes and browser extensions may access localhost; the token is browser CSRF protection, not isolation against them.
 
 Copying a handoff requires clipboard permission in your browser. The report contains user-authored notes and file names, so review it before sharing.
 
 ## Development
 
-Run `npm test`. The UI uses browser-native JavaScript and CSS; there is no build step. The report engine in `vendor/agent-lanes.mjs` is an unchanged MIT-licensed snapshot of Agent Lanes 0.1.0. It is vendored so a fresh clone runs without installing unpublished packages. Update the snapshot explicitly alongside its source tests when changing the task format.
+Run `npm test`. The UI uses browser-native JavaScript and CSS with no build step. The engine is an unchanged MIT-licensed Agent Lanes 0.2.0 snapshot; [its source and hash](vendor/README.md) are recorded. Vendoring keeps archives and clones independent of npm availability. See the [connected quickstart](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/QUICKSTART.md) and [demo](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/DEMO.md).
 
 Related: [Agent Lanes MCP](https://github.com/hexmillionaire/agent-lanes-mcp).
