@@ -4,6 +4,8 @@ A local dashboard for your coding tasks: scopes, changed files, blockers, and th
 
 Works with task files created by [Agent Lanes](https://github.com/hexmillionaire/agent-lanes). Claude Code and Codex can both use the same tasks. There are no model API calls, telemetry, accounts, or runtime dependencies. Each repository can be cloned and run independently.
 
+![Agent Desk showing explicitly labeled sample tasks](docs/preview.png)
+
 ## Try it
 
 Requires Node.js 24.8+ and Git.
