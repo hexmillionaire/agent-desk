@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+
+- Share overlapping overview audits, collect up to two repositories concurrently, and invalidate snapshots after writes.
+- Preserve newer note/create drafts and keep delayed saves or handoffs from affecting a different task.
+- Keep refresh/session errors visible, preserve keyboard focus, and refresh audits while notes are being edited.
+- Update the shared engine to 0.3.0 and verify its version and hash in CI.
+
 ## 0.2.0
 
 - Browser task creation and state, agent label, summary, and next-step editing.

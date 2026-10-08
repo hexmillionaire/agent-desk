@@ -23,7 +23,7 @@
       <footer><span><span class="online-dot"></span> Git metadata stays on this machine.</span><span>Scope audits show paths. Run your tests separately.</span></footer>
     </div>
   </main>
-  <dialog id="detail"><div class="dialog-head"><span class="eyebrow">TASK DETAILS</span><button id="close-detail" aria-label="Close task details">×</button></div><h2 id="detail-title"></h2><p id="detail-goal"></p><div id="detail-meta"></div><h3>Changed files</h3><div id="detail-files"></div><h3>Next step</h3><p id="detail-next"></p>
+  <dialog id="detail" aria-labelledby="detail-title"><div class="dialog-head"><span class="eyebrow">TASK DETAILS</span><button id="close-detail" aria-label="Close task details">×</button></div><h2 id="detail-title"></h2><p id="detail-goal"></p><div id="detail-meta"></div><h3>Changed files</h3><div id="detail-files"></div><h3>Next step</h3><p id="detail-next"></p>
     <form id="edit-task" class="task-form" hidden>
       <h3>Update task notes</h3><p>Scope and base stay fixed. Progress and agent labels are your notes.</p>
       <div class="form-pair"><label>State<select id="edit-state"><option>planned</option><option>working</option><option>blocked</option><option>review</option><option>done</option></select></label><label>Agent label<input id="edit-agent" maxlength="80" required></label></div>
@@ -31,7 +31,7 @@
       <div class="form-actions"><span id="edit-status" role="status" aria-live="polite"></span><button id="save-task" class="primary" type="submit">Save notes</button></div>
     </form>
     <div class="dialog-actions"><span id="copy-status" role="status"></span><button id="copy-handoff" class="primary">Copy handoff ↗</button></div></dialog>
-  <dialog id="create-dialog"><div class="dialog-head"><span class="eyebrow">START A SCOPED TASK</span><button id="close-create" aria-label="Close new task">×</button></div><h2>What are we working on?</h2><p>Choose a repository and allowed paths. The task captures its current HEAD as the base.</p>
+  <dialog id="create-dialog" aria-labelledby="create-title"><div class="dialog-head"><span class="eyebrow">START A SCOPED TASK</span><button id="close-create" aria-label="Close new task">×</button></div><h2 id="create-title">What are we working on?</h2><p>Choose a repository and allowed paths. The task captures its current HEAD as the base.</p>
     <form id="create-task" class="task-form">
       <label>Repository<select id="create-repository" required></select></label>
       <div class="form-pair"><label>Task ID<input id="create-id" pattern="[a-z0-9][a-z0-9_-]{0,63}" maxlength="64" placeholder="login-timeout" required></label><label>Agent label<input id="create-agent" maxlength="80" value="unspecified" required></label></div>
