@@ -8,6 +8,17 @@ Works with task files created by [Agent Lanes](https://github.com/hexmillionaire
 
 ![Editing task notes and exporting a handoff](docs/task-editor.png)
 
+## Install from npm
+
+Requires Node.js 24.8+ and Git. [Agent Desk 0.2.0 is available on npm](https://www.npmjs.com/package/@hexmillionaire/agent-desk).
+
+```sh
+npm install -g @hexmillionaire/agent-desk@0.2.0
+agent-desk --repo /absolute/path/to/project
+```
+
+Open `http://127.0.0.1:4317`. Use `agent-desk --demo` to try the labeled sample tasks. The [connected quickstart](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/QUICKSTART.md) walks through all three tools.
+
 ## Try it
 
 Requires Node.js 24.8+ and Git.
