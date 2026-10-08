@@ -8,12 +8,12 @@ Works with task files created by [Agent Lanes](https://github.com/hexmillionaire
 
 ![Editing task notes and exporting a handoff](docs/task-editor.png)
 
-## Install from npm
+## Install
 
-Requires Node.js 24.8+ and Git. [Agent Desk 0.3.0 is available on npm](https://www.npmjs.com/package/@hexmillionaire/agent-desk).
+Requires Node.js 24.8+ and Git. [Agent Desk 0.3.0 is released on GitHub](https://github.com/hexmillionaire/agent-desk/releases/tag/v0.3.0). npm publication awaits account approval; use the verified release archive below.
 
 ```sh
-npm install -g @hexmillionaire/agent-desk@0.3.0
+npm install -g https://github.com/hexmillionaire/agent-desk/releases/download/v0.3.0/hexmillionaire-agent-desk-0.3.0.tgz
 agent-desk --repo /absolute/path/to/project
 ```
 
