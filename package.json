@@ -1,0 +1,13 @@
+{
+  "name": "@hexmillionaire/agent-desk",
+  "version": "0.1.0",
+  "description": "A private localhost dashboard for portable coding-agent task scopes and handoffs.",
+  "type": "module",
+  "bin": { "agent-desk": "bin/agent-desk.mjs" },
+  "files": ["bin", "src", "public", "vendor", "README.md", "LICENSE"],
+  "scripts": { "start": "node bin/agent-desk.mjs", "demo": "node bin/agent-desk.mjs --demo", "test": "node --test" },
+  "engines": { "node": ">=24.8.0" },
+  "repository": { "type": "git", "url": "https://github.com/hexmillionaire/agent-desk.git" },
+  "license": "MIT",
+  "keywords": ["codex", "claude-code", "dashboard", "git", "handoff"]
+}

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark"><title>Agent Desk</title><link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Agent Desk home"><span class="brand-icon">a<span>·</span></span><span>agent desk<small>YOUR LOCAL WORKSPACE</small></span></a>
+    <div class="nav-label">WORKSPACE</div><div class="nav-current"><span>▦</span> Task overview <span class="dot"></span></div>
+    <div class="nav-label">REPOSITORIES</div><div id="repositories" class="repo-list"></div>
+    <div class="sidebar-footer"><span class="online-dot"></span> LOCAL & PRIVATE<small>Works with Claude, Codex,<br>and the way you already code.</small></div>
+  </aside>
+  <main>
+    <header><div class="breadcrumb">Workspace <span>/</span> Overview</div><div class="header-right"><span id="mode" class="mode">LOCALHOST</span><span class="avatar">A</span></div></header>
+    <div class="content">
+      <div class="title-row"><div><div class="eyebrow">A LITTLE CONTEXT. A CLEAR NEXT STEP.</div><h1>Your work, in view<span>.</span></h1><p>Follow each task from the first change to the next handoff.</p></div><button id="refresh" class="refresh">↻ <span>Refresh</span></button></div>
+      <div class="metrics"><div><span class="metric-label">TOTAL TASKS</span><strong id="total">—</strong><small>across your repositories</small></div><div><span class="metric-label">IN PROGRESS</span><strong id="working">—</strong><small>working or awaiting review</small></div><div><span class="metric-label">NEEDS ATTENTION</span><strong id="attention" class="amber">—</strong><small>blocked or outside task scope</small></div><div><span class="metric-label">READY FOR HANDOFF</span><strong id="ready" class="mint">—</strong><small>review tasks within scope</small></div></div>
+      <section class="workspace-panel"><div class="panel-heading"><div><h2>Task board <span id="task-count">0</span></h2><p>Agent labels and progress come from your task notes.</p></div><label class="search-box"><span>⌕</span><input id="search" type="search" placeholder="Find a task…" aria-label="Search tasks"></label></div>
+        <div class="filters"><div role="group" aria-label="Filter tasks"><button class="filter active" data-filter="all" aria-pressed="true">All tasks</button><button class="filter" data-filter="working" aria-pressed="false">In progress</button><button class="filter" data-filter="attention" aria-pressed="false">Needs attention</button><button class="filter" data-filter="done" aria-pressed="false">Done</button></div><span id="updated">Connecting…</span></div>
+        <div id="notice" role="status" aria-live="polite"></div><div id="board" class="board"></div>
+      </section>
+      <footer><span><span class="online-dot"></span> Git metadata stays on this machine.</span><span>Scope audits show paths. Run your tests separately.</span></footer>
+    </div>
+  </main>
+  <dialog id="detail"><div class="dialog-head"><span class="eyebrow">TASK DETAILS</span><button id="close-detail" aria-label="Close task details">×</button></div><h2 id="detail-title"></h2><p id="detail-goal"></p><div id="detail-meta"></div><h3>Changed files</h3><div id="detail-files"></div><h3>Next step</h3><p id="detail-next"></p><div class="dialog-actions"><span id="copy-status" role="status"></span><button id="copy-handoff" class="primary">Copy handoff ↗</button></div></dialog>
+  <script src="/app.js" type="module"></script>
+</body></html>
