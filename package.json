@@ -1,6 +1,6 @@
 {
   "name": "@hexmillionaire/agent-desk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A private localhost dashboard for portable coding-agent task scopes and handoffs.",
   "type": "module",
   "bin": {
@@ -21,7 +21,8 @@
     "start": "node bin/agent-desk.mjs",
     "demo": "node bin/agent-desk.mjs --demo",
     "test": "node --test",
-    "test:package": "node scripts/package-smoke.mjs"
+    "test:package": "node scripts/package-smoke.mjs",
+    "test:vendor": "node scripts/verify-vendor.mjs"
   },
   "engines": {
     "node": ">=24.8.0"

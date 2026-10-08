@@ -10,10 +10,10 @@ Works with task files created by [Agent Lanes](https://github.com/hexmillionaire
 
 ## Install from npm
 
-Requires Node.js 24.8+ and Git. [Agent Desk 0.2.0 is available on npm](https://www.npmjs.com/package/@hexmillionaire/agent-desk).
+Requires Node.js 24.8+ and Git. [Agent Desk 0.3.0 is available on npm](https://www.npmjs.com/package/@hexmillionaire/agent-desk).
 
 ```sh
-npm install -g @hexmillionaire/agent-desk@0.2.0
+npm install -g @hexmillionaire/agent-desk@0.3.0
 agent-desk --repo /absolute/path/to/project
 ```
 
@@ -67,6 +67,12 @@ Copying a handoff requires clipboard permission in your browser. The report cont
 
 ## Development
 
-Run `npm test`. The UI uses browser-native JavaScript and CSS with no build step. The engine is an unchanged MIT-licensed Agent Lanes 0.2.0 snapshot; [its source and hash](vendor/README.md) are recorded. Vendoring keeps archives and clones independent of npm availability. See the [connected quickstart](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/QUICKSTART.md) and [demo](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/DEMO.md).
+Run `npm test`. The UI uses browser-native JavaScript and CSS with no build step. The engine is an unchanged MIT-licensed Agent Lanes 0.3.0 snapshot; [its source and hash](vendor/README.md) are recorded. Vendoring keeps archives and clones independent of npm availability. See the [connected quickstart](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/QUICKSTART.md) and [demo](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/DEMO.md).
 
 Related: [Agent Lanes MCP](https://github.com/hexmillionaire/agent-lanes-mcp).
+
+## Performance and reliability review
+
+See the [October 2026 investigation](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/INVESTIGATION.md) for measured results, language/runtime decisions, limitations, and the next improvements. Use the latest Node 24 LTS patch; Node 24.8 is the tested minimum.
+
+Task creation requires a filesystem with hard-link support (such as NTFS, APFS, or ext4). Atomic file replacement prevents partial JSON reads; it does not merge simultaneous edits from separate processes.

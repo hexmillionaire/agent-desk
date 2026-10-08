@@ -133,3 +133,31 @@ test('writes reject oversized bodies and unsupported content types', async t => 
   assert.equal((await request('POST', create, { 'Content-Type': 'text/plain' })).status, 415);
   assert.equal((await request('POST', { ...create, padding: 'x'.repeat(17000) })).status, 413);
 });
+
+test('concurrent overview requests share an audit and the next request reads fresh Git changes', async t => {
+  const { root, url, create, request } = await realFixture(t);
+  assert.equal((await request('POST', create)).status, 201);
+  const snapshots = await Promise.all(Array.from({ length: 8 }, async () => (await fetch(`${url}/api/overview`)).json()));
+  for (const snapshot of snapshots) assert.deepEqual(snapshot, snapshots[0]);
+  await writeFile(path.join(root, 'outside.txt'), 'Fresh after the shared snapshot\n');
+  const fresh = await (await fetch(`${url}/api/overview`)).json();
+  assert.equal(fresh.repositories[0].reports[0].ok, false);
+  assert.equal(fresh.repositories[0].reports[0].changes[0].path, 'outside.txt');
+});
+
+test('overview preserves configured repository order and isolates repository errors', async t => {
+  const { root } = await realFixture(t);
+  const { url } = await fixture(t, { repositories: [
+    { id: 'missing', name: 'Unavailable', path: path.join(root, 'missing') },
+    { id: 'valid', name: 'Available', path: root },
+  ] });
+  const data = await (await fetch(`${url}/api/overview`)).json();
+  assert.deepEqual(data.repositories.map(repo => repo.id), ['missing', 'valid']);
+  // A nonexistent repository without task storage still has an empty task list.
+  // Real errors must not prevent the other repository from being displayed.
+  await mkdir(path.join(root, 'missing', '.agent-lanes'), { recursive: true });
+  await writeFile(path.join(root, 'missing', '.agent-lanes', 'invalid.json'), '{}');
+  const failed = await (await fetch(`${url}/api/overview`)).json();
+  assert.match(failed.repositories[0].error, /Unsupported task format/);
+  assert.deepEqual(failed.repositories[1].reports, []);
+});

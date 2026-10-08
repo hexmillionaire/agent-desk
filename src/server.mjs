@@ -31,20 +31,38 @@ export function createDesk({ repositories = [], demo = false, readOnly = false }
   const token = randomBytes(32).toString('hex');
   // Serialize writes so two UI updates cannot silently overwrite each other.
   let pendingWrite = Promise.resolve();
+  let overviewFlight;
   function mutate(fn) {
     const result = pendingWrite.then(fn);
     pendingWrite = result.catch(() => {});
     return result;
   }
-  async function overview() {
-    if (demo) return { ...demoOverview(), writable: false };
-    await pendingWrite;
-    const entries = [];
-    for (const repo of repositories) {
-      try { entries.push({ id: repo.id, name: repo.name, reports: await checkAll(repo.path) }); }
-      catch (error) { entries.push({ id: repo.id, name: repo.name, reports: [], error: error.message }); }
-    }
-    return { demo: false, writable, checkedAt: new Date().toISOString(), repositories: entries };
+  function overview() {
+    if (demo) return Promise.resolve({ ...demoOverview(), writable: false });
+    const barrier = pendingWrite;
+    // Multiple tabs share only an active audit. The next request always audits Git
+    // again, and a task write invalidates any snapshot still being collected.
+    if (overviewFlight?.barrier === barrier) return overviewFlight.promise;
+    const flight = { barrier };
+    flight.promise = (async () => {
+      await barrier;
+      const entries = new Array(repositories.length);
+      let next = 0;
+      async function collect() {
+        while (next < repositories.length) {
+          const index = next++;
+          const repo = repositories[index];
+          try { entries[index] = { id: repo.id, name: repo.name, reports: await checkAll(repo.path) }; }
+          catch (error) { entries[index] = { id: repo.id, name: repo.name, reports: [], error: error.message }; }
+        }
+      }
+      // Bound Git process pressure while allowing independent repositories to run.
+      await Promise.all(Array.from({ length: Math.min(2, repositories.length) }, collect));
+      if (barrier !== pendingWrite) return overview();
+      return { demo: false, writable, checkedAt: new Date().toISOString(), repositories: entries };
+    })().finally(() => { if (overviewFlight === flight) overviewFlight = undefined; });
+    overviewFlight = flight;
+    return flight.promise;
   }
   const server = createServer(async (req, res) => {
     const port = server.address()?.port;
@@ -91,7 +109,10 @@ export function createDesk({ repositories = [], demo = false, readOnly = false }
         if (demo) report = demoOverview().repositories.find(repo => repo.id === repoId)?.reports.find(item => item.task.id === taskId);
         else {
           const repo = repositories.find(item => item.id === repoId);
-          if (repo) report = await checkTask(repo.path, await readTask(repo.path, taskId));
+          if (repo) {
+            await pendingWrite;
+            report = await checkTask(repo.path, await readTask(repo.path, taskId));
+          }
         }
         if (!report) return send(404, JSON.stringify({ error: 'Task not found.' }));
         return send(200, handoff(report), 'text/markdown; charset=utf-8');
