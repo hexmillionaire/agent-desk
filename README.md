@@ -6,14 +6,14 @@ Works with task files created by [Agent Lanes](https://github.com/hexmillionaire
 
 ![Agent Desk showing explicitly labeled sample tasks](docs/preview.png)
 
-![Editing task notes and exporting a handoff](docs/task-editor.png)
+![Reviewing a fictional concurrent note conflict in version 0.4.0](docs/conflict-review.png)
 
-## Install from npm
+## Install the current release
 
-Requires Node.js 24.8+ and Git. [Agent Desk 0.3.0 is available on npm](https://www.npmjs.com/package/@hexmillionaire/agent-desk).
+Requires Node.js 24.8+ and Git. Version 0.4.0 is provided as an independently installable GitHub release archive.
 
 ```sh
-npm install -g @hexmillionaire/agent-desk@0.3.0
+npm install -g https://github.com/hexmillionaire/agent-desk/releases/download/v0.4.0/hexmillionaire-agent-desk-0.4.0.tgz
 agent-desk --repo /absolute/path/to/project
 ```
 
@@ -40,7 +40,7 @@ node bin/agent-desk.mjs --repo /path/to/api --repo /path/to/cli --port 4317
 
 Use quoted Windows paths on PowerShell. Choose **New task** to set a goal, task ID, and allowed/denied paths, or create tasks with Agent Lanes. Task cards show progress, agent labels, Git branch, changed-file counts, and scope warnings. Open a card to inspect paths, edit notes/status, and copy a fresh handoff. Task scope and the captured base remain fixed. Add `.agent-lanes/` to each repository's `.gitignore` before sharing changes.
 
-The board refreshes every ten seconds while visible. Auto-refresh can be paused. Unsaved notes survive refresh; if another client changed the task, a save returns a conflict and asks you to reopen it. Start with `--read-only` to disable editing. Demo mode always stays read-only.
+The board refreshes every ten seconds while visible. Auto-refresh can be paused. Unsaved notes survive refresh; if another client changed the task, review original/current/draft values, choose overlapping changes and explicitly save the reviewed draft. A second concurrent edit produces another conflict. Start with `--read-only` to disable editing. Demo mode always stays read-only.
 
 Agent labels and progress are manually recorded task metadata. Desk writes only `.agent-lanes/` task metadata in configured repositories. It does not inspect Claude/Codex app sessions, show live process status, launch agents, modify source code, verify tests, or infer completion. A `done` label is not a test result. Use separate worktrees for concurrent tasks; each task sees all changes since its base.
 
@@ -67,7 +67,7 @@ Copying a handoff requires clipboard permission in your browser. The report cont
 
 ## Development
 
-Run `npm test`. The UI uses browser-native JavaScript and CSS with no build step. The engine is an unchanged MIT-licensed Agent Lanes 0.3.0 snapshot; [its source and hash](vendor/README.md) are recorded. Vendoring keeps archives and clones independent of npm availability. See the [connected quickstart](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/QUICKSTART.md) and [demo](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/DEMO.md).
+Run `npm test`. The UI uses browser-native JavaScript and CSS with no build step. The engine is an unchanged MIT-licensed Agent Lanes 0.4.0 core and template reader snapshot; [its source and hash](vendor/README.md) are recorded. Vendoring keeps archives and clones independent of npm availability. See the [connected quickstart](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/QUICKSTART.md) and [demo](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/DEMO.md).
 
 Related: [Agent Lanes MCP](https://github.com/hexmillionaire/agent-lanes-mcp).
 
@@ -75,4 +75,8 @@ Related: [Agent Lanes MCP](https://github.com/hexmillionaire/agent-lanes-mcp).
 
 See the [October 2026 investigation](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/INVESTIGATION.md) for measured results, language/runtime decisions, limitations, and the next improvements. Use the latest Node 24 LTS patch; Node 24.8 is the tested minimum.
 
-Task creation requires a filesystem with hard-link support (such as NTFS, APFS, or ext4). Atomic file replacement prevents partial JSON reads; it does not merge simultaneous edits from separate processes.
+Task creation requires a filesystem with hard-link support (such as NTFS, APFS, or ext4). The 0.4.0 core coordinates participating writers across processes and checks note revisions inside the lock. Upgrade Agent Lanes writers too. Older clients and manual edits do not participate. See [coordination and explicit crash recovery](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/COORDINATION.md).
+
+## Saved scope and templates
+
+Task details display the full captured base and literal allowed/denied paths; see [the fictional saved-scope screenshot](docs/saved-scope.png). Creation can load `.agent-lanes-templates.json` from each configured repository, preview the scope and explicitly apply its paths. Invalid templates leave manual creation available. Templates never run commands or change a saved task. See [the template format](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/COORDINATION.md) and [the dated investigation](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/COMMUNITY-TOOLS.md).
