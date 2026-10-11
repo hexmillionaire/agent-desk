@@ -10,11 +10,17 @@ Works with task files created by [Agent Lanes](https://github.com/hexmillionaire
 
 ## Install the current release
 
-Requires Node.js 24.8+ and Git. Version 0.4.0 is provided as an independently installable GitHub release archive.
+Requires Node.js 24.8+ and Git. [Version 0.4.0 is on npm](https://www.npmjs.com/package/@hexmillionaire/agent-desk), published October 11, 2026.
+
+```sh
+npm install -g @hexmillionaire/agent-desk@0.4.0
+agent-desk --repo /absolute/path/to/project
+```
+
+For a quick demo, use `npx --yes @hexmillionaire/agent-desk@0.4.0 --demo`. The versioned GitHub release archive remains an alternative:
 
 ```sh
 npm install -g https://github.com/hexmillionaire/agent-desk/releases/download/v0.4.0/hexmillionaire-agent-desk-0.4.0.tgz
-agent-desk --repo /absolute/path/to/project
 ```
 
 Open `http://127.0.0.1:4317`. Use `agent-desk --demo` to try the labeled sample tasks. The [connected quickstart](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/QUICKSTART.md) walks through all three tools.
