@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- Display saved allow/deny paths and the full captured base in task details.
+- Preview and explicitly apply per-repository data-only scope templates.
+- Review original/current/draft note conflicts, merge independent edits and require explicit overlapping choices before saving again.
+- Use core revision checks under cross-process writer coordination; preserve drafts on occupied-lock errors.
+
+
 ## 0.3.0
 
 - Share overlapping overview audits, collect up to two repositories concurrently, and invalidate snapshots after writes.

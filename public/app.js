@@ -15,9 +15,78 @@ let createGeneration = 0;
 let createRevision = 0;
 let repositorySignature;
 let boardSignature;
+let noteConflict;
+let writingNotes = false;
+let availableTemplates = [];
+let templatesRequest = 0;
+const noteFields = ['state', 'agent', 'summary', 'next'];
+const noteLabels = { state: 'State', agent: 'Agent label', summary: 'Summary', next: 'Next step' };
 const el = (tag, className, text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };
 const allTasks = () => (overview?.repositories || []).flatMap(repo => repo.reports.map(report => ({ ...report, repository: repo })));
 const needsAttention = item => !item.ok || item.task.state === 'blocked';
+const draftNotes = () => Object.fromEntries(noteFields.map(field => [field, $(`edit-${field}`).value]));
+function fillNotes(notes) { for (const field of noteFields) $(`edit-${field}`).value = notes[field]; }
+function renderPatterns(id, patterns) {
+  $(id).replaceChildren();
+  for (const pattern of patterns) $(id).append(el('li', '', pattern));
+  if (!patterns.length) $(id).append(el('li', '', 'None'));
+}
+function noteReview() {
+  const draft = draftNotes();
+  return noteFields.map(field => {
+    const original = noteConflict.original[field];
+    const latest = noteConflict.latest[field];
+    const mine = draft[field];
+    const overlap = mine !== original && latest !== original && mine !== latest;
+    return { field, original, latest, mine, overlap, value: mine === original ? latest : mine };
+  });
+}
+function updateNoteButtons() {
+  $('save-task').disabled = writingNotes || !!noteConflict;
+  $('use-latest-notes').disabled = writingNotes;
+  $('apply-note-review').disabled = writingNotes || !noteConflict || noteReview().some(item => item.overlap && !noteConflict.choices[item.field]);
+}
+function clearConflict() {
+  noteConflict = undefined;
+  $('note-conflict').hidden = true;
+  $('conflict-fields').replaceChildren();
+  $('conflict-status').textContent = '';
+  updateNoteButtons();
+}
+function renderConflict() {
+  $('note-conflict').hidden = false;
+  $('conflict-fields').replaceChildren();
+  for (const item of noteReview()) {
+    const row = el('fieldset', 'note-field');
+    row.append(el('legend', '', `${noteLabels[item.field]}${item.overlap ? ' · choose a value' : ''}`));
+    if (item.overlap) {
+      for (const [choice, label, value] of [['latest', 'Use latest saved value', item.latest], ['draft', 'Use my draft value', item.mine]]) {
+        const option = el('label', 'note-choice');
+        const radio = el('input'); radio.type = 'radio'; radio.name = `review-${item.field}`; radio.value = choice;
+        radio.dataset.noteChoice = 'true'; radio.checked = noteConflict.choices[item.field] === choice;
+        radio.addEventListener('change', () => { noteConflict.choices[item.field] = choice; updateNoteButtons(); });
+        option.append(radio, el('span', '', label));
+        row.append(option, el('pre', '', value || '(empty)'));
+      }
+      const original = el('details'); original.append(el('summary', '', 'Original value'), el('pre', '', item.original || '(empty)')); row.append(original);
+    } else {
+      row.append(el('p', '', item.mine === item.original && item.latest !== item.original ? 'Latest saved edit' : item.mine !== item.original ? 'Your draft edit' : 'Unchanged'), el('pre', '', item.value || '(empty)'));
+    }
+    $('conflict-fields').append(row);
+  }
+  $('conflict-status').textContent = 'Review the combined notes before applying them.';
+  updateNoteButtons();
+}
+function showConflict(currentTask) {
+  if (!selected || currentTask.id !== selected.task.id) return;
+  // A late conflict response must not replace a newer revision already polled.
+  if (noteConflict && Date.parse(currentTask.updatedAt) < Date.parse(noteConflict.latest.updatedAt)) return;
+  if (!noteConflict || noteConflict.latest.updatedAt !== currentTask.updatedAt) {
+    noteConflict = { original: selected.task, latest: currentTask, choices: {} };
+    renderConflict();
+  }
+  $('edit-status').textContent = 'Task changed elsewhere. Your draft is preserved below.';
+}
 function renderNotice() {
   const errors = (overview?.repositories || []).filter(repo => repo.error).map(repo => `${repo.name}: ${repo.error}`);
   const messages = [sessionError, refreshError, actionNotice, ...errors].filter(Boolean);
@@ -79,6 +148,9 @@ function renderDetailAudit(item) {
   $('detail-title').textContent = item.task.id;
   $('detail-goal').textContent = item.task.goal;
   $('detail-meta').textContent = `${item.repository.name} · ${item.branch} · ${item.task.state} · agent label: ${item.task.agent}`;
+  $('detail-base').textContent = item.task.base;
+  renderPatterns('detail-allow', item.task.allow);
+  renderPatterns('detail-deny', item.task.deny);
   $('detail-files').replaceChildren();
   for (const file of item.changes) { const row = el('div', 'file-row'); row.append(el('span', `file-verdict${file.verdict === 'allowed' ? '' : ' alert'}`, file.verdict.toUpperCase()), el('span', '', `${file.status} ${file.path}`)); $('detail-files').append(row); }
   if (!item.changes.length) $('detail-files').append(el('p', '', 'No net file changes since the task base.'));
@@ -89,13 +161,11 @@ function openDetail(item, { updating = false } = {}) {
   if (!updating) detailGeneration++;
   selected = item;
   dirty = false;
+  clearConflict();
   renderDetailAudit(item);
   if (!updating) $('copy-status').textContent = '';
   $('edit-task').hidden = !session?.writable;
-  $('edit-state').value = item.task.state;
-  $('edit-agent').value = item.task.agent;
-  $('edit-summary').value = item.task.summary;
-  $('edit-next').value = item.task.next;
+  fillNotes(item.task);
   if (!updating) $('edit-status').textContent = '';
   if (!$('detail').open) $('detail').showModal();
 }
@@ -119,7 +189,7 @@ async function refresh(fresh = false) {
       if (item && !dirty) openDetail(item, { updating: true });
       else if (item) {
         renderDetailAudit(item);
-        if (item.task.updatedAt !== selected.task.updatedAt) $('edit-status').textContent = 'Task changed elsewhere. Your draft is preserved; close and reopen before saving.';
+        if (item.task.updatedAt !== selected.task.updatedAt) showConflict(item.task);
       }
       else if (!item && !dirty) { $('detail').close(); selected = undefined; }
       else if (!item) $('edit-status').textContent = 'Task is no longer available. Your draft is preserved.';
@@ -152,18 +222,59 @@ $('copy-handoff').addEventListener('click', async () => {
 async function writeTask(method, data) {
   const response = await fetch('/api/tasks', { method, headers: { 'Content-Type': 'application/json', 'X-Agent-Desk-Token': session.token }, body: JSON.stringify(data) });
   const result = await response.json();
-  if (!response.ok) throw new Error(result.error || `Server returned ${response.status}`);
+  if (!response.ok) throw Object.assign(new Error(result.error || `Server returned ${response.status}`), { status: response.status, currentTask: result.currentTask });
   return result;
 }
-$('new-task').addEventListener('click', () => {
+async function loadTemplates() {
+  const repository = $('create-repository').value;
+  const generation = createGeneration;
+  const request = ++templatesRequest;
+  const active = () => $('create-dialog').open && generation === createGeneration && request === templatesRequest && repository === $('create-repository').value;
+  availableTemplates = [];
+  $('create-template').replaceChildren();
+  const custom = el('option', '', 'Custom paths'); custom.value = ''; $('create-template').append(custom);
+  $('create-template').value = ''; $('create-template').disabled = true;
+  $('template-preview').hidden = true;
+  $('template-status').textContent = 'Loading scope templates…';
+  try {
+    const response = await fetch(`/api/templates?repo=${encodeURIComponent(repository)}`, { cache: 'no-store' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Scope templates are unavailable.');
+    if (!active()) return;
+    availableTemplates = data.templates;
+    for (const template of availableTemplates) { const option = el('option', '', template.name); option.value = template.id; $('create-template').append(option); }
+    $('create-template').disabled = false;
+    $('template-status').textContent = availableTemplates.length ? 'Choose a template to preview its paths.' : 'No saved templates. Enter custom paths below.';
+  } catch (error) { if (active()) $('template-status').textContent = `${error.message} You can still enter custom paths.`; }
+}
+$('new-task').addEventListener('click', async () => {
   createGeneration++;
   $('create-repository').replaceChildren();
   for (const repo of overview.repositories) {
     const option = el('option', '', repo.name); option.value = repo.id; $('create-repository').append(option);
   }
-  if (repoFilter) $('create-repository').value = repoFilter;
+  $('create-repository').value = repoFilter || overview.repositories[0].id;
   $('create-status').textContent = '';
   $('create-dialog').showModal();
+  await loadTemplates();
+});
+$('create-repository').addEventListener('change', () => { createRevision++; return loadTemplates(); });
+$('create-template').addEventListener('change', () => {
+  const template = availableTemplates.find(item => item.id === $('create-template').value);
+  $('template-preview').hidden = !template;
+  if (!template) return;
+  $('template-name').textContent = template.name;
+  $('template-description').textContent = template.description;
+  renderPatterns('template-allow', template.allow);
+  renderPatterns('template-deny', template.deny);
+});
+$('apply-template').addEventListener('click', () => {
+  const template = availableTemplates.find(item => item.id === $('create-template').value);
+  if (!template) return;
+  $('create-allow').value = template.allow.join('\n');
+  $('create-deny').value = template.deny.join('\n');
+  createRevision++;
+  $('template-status').textContent = 'Paths applied. Review them before creating your task.';
 });
 $('close-create').addEventListener('click', () => $('create-dialog').close());
 const patterns = id => $(id).value.split('\n').map(value => value.trim()).filter(Boolean);
@@ -192,10 +303,32 @@ $('create-task').addEventListener('submit', async event => {
   }
   finally { $('create-submit').disabled = false; }
 });
-$('edit-task').addEventListener('input', () => { dirty = true; draftRevision++; });
+$('edit-task').addEventListener('input', event => {
+  if (event.target?.dataset?.noteChoice) return;
+  dirty = true; draftRevision++;
+  if (noteConflict) { noteConflict.choices = {}; renderConflict(); }
+});
+$('use-latest-notes').addEventListener('click', () => {
+  if (!noteConflict || writingNotes) return;
+  selected = { ...selected, task: noteConflict.latest };
+  fillNotes(selected.task); renderDetailAudit(selected);
+  dirty = false; draftRevision++;
+  clearConflict(); $('edit-status').textContent = 'Latest saved notes loaded.';
+});
+$('apply-note-review').addEventListener('click', () => {
+  if (!noteConflict || writingNotes) return;
+  const review = noteReview();
+  if (review.some(item => item.overlap && !noteConflict.choices[item.field])) return;
+  const merged = Object.fromEntries(review.map(item => [item.field, item.overlap ? (noteConflict.choices[item.field] === 'latest' ? item.latest : item.mine) : item.value]));
+  selected = { ...selected, task: noteConflict.latest };
+  fillNotes(merged); renderDetailAudit(selected);
+  dirty = true; draftRevision++;
+  clearConflict(); $('edit-status').textContent = 'Reviewed notes applied to your draft. Save notes to record them.';
+});
 $('edit-task').addEventListener('submit', async event => {
   event.preventDefault(); if (!selected) return;
-  $('save-task').disabled = true;
+  if (noteConflict || writingNotes) return;
+  writingNotes = true; updateNoteButtons();
   const generation = detailGeneration;
   const revision = draftRevision;
   const editing = selected;
@@ -204,16 +337,22 @@ $('edit-task').addEventListener('submit', async event => {
   try {
     const saved = await writeTask('PATCH', { repository: editing.repository.id, expectedUpdatedAt: editing.task.updatedAt, task: { id: editing.task.id, state: $('edit-state').value, agent: $('edit-agent').value, summary: $('edit-summary').value, next: $('edit-next').value } });
     if (active()) {
+      const latest = noteConflict?.latest;
       selected = { ...selected, task: saved };
       if (revision === draftRevision) dirty = false;
+      clearConflict();
+      if (dirty && latest && Date.parse(latest.updatedAt) > Date.parse(saved.updatedAt)) showConflict(latest);
     }
     await refresh(true);
-    if (active()) $('edit-status').textContent = dirty ? 'Notes saved. Your newer draft changes still need saving.' : 'Notes saved.';
+    if (active() && !noteConflict) $('edit-status').textContent = dirty ? 'Notes saved. Your newer draft changes still need saving.' : 'Notes saved.';
   } catch (error) {
-    if (active()) $('edit-status').textContent = error.message;
+    if (active()) {
+      if (error.status === 409 && error.currentTask) showConflict(error.currentTask);
+      else $('edit-status').textContent = error.message;
+    }
     else { actionNotice = `Could not save notes for ${editing.task.id}: ${error.message}`; renderNotice(); }
   }
-  finally { $('save-task').disabled = false; }
+  finally { writingNotes = false; updateNoteButtons(); }
 });
 try {
   const response = await fetch('/api/session', { cache: 'no-store' });

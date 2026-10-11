@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import { checkAll, checkTask, readTask, handoff, startTask, updateTask } from '../vendor/agent-lanes.mjs';
+import { checkAll, checkTask, readTask, readTemplates, handoff, startTask, updateTask } from '../vendor/agent-lanes.mjs';
 import { demoOverview } from './demo.mjs';
 
 const assets = new Map([['/', ['index.html', 'text/html; charset=utf-8']], ['/style.css', ['style.css', 'text/css; charset=utf-8']], ['/app.js', ['app.js', 'text/javascript; charset=utf-8']]]);
@@ -25,6 +25,8 @@ function fields(value, accepted) {
   for (const key of Object.keys(value)) if (!accepted.includes(key)) throw inputError(`Unsupported field: ${key}`);
   return value;
 }
+const taskFields = ['version', 'id', 'goal', 'base', 'allow', 'deny', 'state', 'agent', 'summary', 'next', 'createdAt', 'updatedAt'];
+function publicTask(task) { return Object.fromEntries(taskFields.map(key => [key, task[key]])); }
 
 export function createDesk({ repositories = [], demo = false, readOnly = false } = {}) {
   const writable = !demo && !readOnly;
@@ -52,7 +54,7 @@ export function createDesk({ repositories = [], demo = false, readOnly = false }
         while (next < repositories.length) {
           const index = next++;
           const repo = repositories[index];
-          try { entries[index] = { id: repo.id, name: repo.name, reports: await checkAll(repo.path) }; }
+          try { entries[index] = { id: repo.id, name: repo.name, reports: (await checkAll(repo.path)).map(report => ({ ...report, task: publicTask(report.task) })) }; }
           catch (error) { entries[index] = { id: repo.id, name: repo.name, reports: [], error: error.message }; }
         }
       }
@@ -90,11 +92,10 @@ export function createDesk({ repositories = [], demo = false, readOnly = false }
           const options = fields(data.task, ['id', 'state', 'agent', 'summary', 'next']);
           const { id, ...updates } = options;
           if (!Object.keys(updates).length) throw inputError('Provide at least one note field.');
-          const current = await readTask(repo.path, id);
-          if (typeof data.expectedUpdatedAt !== 'string' || data.expectedUpdatedAt !== current.updatedAt) throw inputError('Task changed since you opened it. Close and reopen the task before saving.', 409);
-          return updateTask(repo.path, id, updates);
+          if (typeof data.expectedUpdatedAt !== 'string' || !data.expectedUpdatedAt) throw inputError('A saved task revision is required.');
+          return updateTask(repo.path, id, updates, { expectedUpdatedAt: data.expectedUpdatedAt });
         });
-        return send(req.method === 'POST' ? 201 : 200, JSON.stringify(task));
+        return send(req.method === 'POST' ? 201 : 200, JSON.stringify(publicTask(task)));
       }
       if (url.pathname === '/api/session') return send(200, JSON.stringify({ writable, token: writable ? token : null, refreshInterval: 10000 }));
       if (assets.has(url.pathname)) {
@@ -102,6 +103,12 @@ export function createDesk({ repositories = [], demo = false, readOnly = false }
         return send(200, await readFile(new URL(`../public/${name}`, import.meta.url)), type);
       }
       if (url.pathname === '/api/overview') return send(200, JSON.stringify(await overview()));
+      if (url.pathname === '/api/templates') {
+        const repo = repositories.find(item => item.id === url.searchParams.get('repo'));
+        if (!repo) return send(404, JSON.stringify({ error: 'Repository is not configured.' }));
+        try { return send(200, JSON.stringify({ repository: repo.id, ...await readTemplates(repo.path) })); }
+        catch { return send(400, JSON.stringify({ error: 'Could not read scope templates. Check .agent-lanes-templates.json or enter custom paths.' })); }
+      }
       if (url.pathname === '/api/handoff') {
         const repoId = url.searchParams.get('repo');
         const taskId = url.searchParams.get('task');
@@ -118,7 +125,11 @@ export function createDesk({ repositories = [], demo = false, readOnly = false }
         return send(200, handoff(report), 'text/markdown; charset=utf-8');
       }
       return send(404, JSON.stringify({ error: 'Not found.' }));
-    } catch (error) { return send(error.code === 'EEXIST' ? 409 : error.status || 400, JSON.stringify({ error: error.message })); }
+    } catch (error) {
+      if (error.code === 'TASK_CONFLICT') return send(409, JSON.stringify({ error: 'Task notes changed while you were editing. Review the latest notes before saving.', currentTask: publicTask(error.currentTask) }));
+      if (error.code === 'TASK_LOCKED') return send(423, JSON.stringify({ error: 'Task metadata is busy in another process. Try saving again after it finishes.' }));
+      return send(error.code === 'EEXIST' ? 409 : error.status || 400, JSON.stringify({ error: error.message }));
+    }
   });
   server.requestTimeout = 20000;
   server.headersTimeout = 10000;

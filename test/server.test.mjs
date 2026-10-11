@@ -161,3 +161,65 @@ test('overview preserves configured repository order and isolates repository err
   assert.match(failed.repositories[0].error, /Unsupported task format/);
   assert.deepEqual(failed.repositories[1].reports, []);
 });
+
+test('conflicts from another process return only safe current task fields and preserve saved notes', async t => {
+  const { root, url, create, request } = await realFixture(t);
+  const original = await (await request('POST', create)).json();
+  await writeFile(path.join(root, '.agent-lanes', 'fix.json'), JSON.stringify({ ...original, privateExtension: 'private-value-not-for-the-api' }));
+  const coreUrl = new URL('../vendor/agent-lanes.mjs', import.meta.url).href;
+  execFileSync(process.execPath, ['--input-type=module', '-e', 'const core = await import(process.argv[1]); await core.updateTask(process.argv[2], "fix", { next: "Recorded by another process" });', coreUrl, root], { windowsHide: true });
+  const conflict = await request('PATCH', { repository: 'repo-1', expectedUpdatedAt: original.updatedAt, task: { id: 'fix', summary: 'Unsaved browser draft' } });
+  assert.equal(conflict.status, 409);
+  const result = await conflict.json();
+  assert.equal(result.currentTask.next, 'Recorded by another process');
+  assert.equal(result.currentTask.summary, '');
+  assert.equal(result.currentTask.privateExtension, undefined);
+  assert.equal(JSON.stringify(result).includes('private-value-not-for-the-api'), false);
+  const overview = await (await fetch(`${url}/api/overview`)).json();
+  assert.equal(overview.repositories[0].reports[0].task.privateExtension, undefined);
+  const saved = await request('PATCH', { repository: 'repo-1', expectedUpdatedAt: result.currentTask.updatedAt, task: { id: 'fix', summary: 'Reviewed browser draft' } });
+  assert.equal(saved.status, 200);
+  assert.equal((await saved.json()).next, 'Recorded by another process');
+  assert.equal((await request('PATCH', { repository: 'repo-1', task: { id: 'fix', summary: 'Missing revision' } })).status, 400);
+});
+
+test('scope templates are repository-scoped data and remain available in read-only mode', async t => {
+  const { root, url } = await realFixture(t, { readOnly: true });
+  const endpoint = `${url}/api/templates?repo=repo-1`;
+  assert.deepEqual(await (await fetch(endpoint)).json(), { repository: 'repo-1', version: 1, templates: [] });
+  const templates = { version: 1, templates: [{ id: 'docs', name: 'Documentation', description: 'Review public docs', allow: ['docs/**', 'README.md'], deny: ['docs/private/**'] }] };
+  await writeFile(path.join(root, '.agent-lanes-templates.json'), JSON.stringify(templates));
+  const response = await fetch(endpoint);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { repository: 'repo-1', ...templates });
+  assert.equal((await fetch(`${url}/api/templates?repo=../elsewhere`)).status, 404);
+});
+
+test('invalid template configuration returns an actionable error without leaking its contents', async t => {
+  const { root, url, create, request } = await realFixture(t);
+  await writeFile(path.join(root, '.agent-lanes-templates.json'), '{ "private-note-do-not-expose"');
+  let response = await fetch(`${url}/api/templates?repo=repo-1`);
+  assert.equal(response.status, 400);
+  const error = await response.text();
+  assert.match(error, /enter custom paths/);
+  assert.equal(error.includes('private-note-do-not-expose'), false);
+  await writeFile(path.join(root, '.agent-lanes-templates.json'), JSON.stringify({ version: 1, templates: [{ id: 'unsafe', name: 'Unsafe', description: '', allow: ['src/**'], deny: [], command: 'must-not-run' }] }));
+  response = await fetch(`${url}/api/templates?repo=repo-1`);
+  assert.equal(response.status, 400);
+  assert.equal((await request('POST', create)).status, 201);
+});
+
+test('an occupied writer lock returns 423 without exposing its owner or changing notes', { timeout: 15000 }, async t => {
+  const { root, create, request } = await realFixture(t);
+  const task = await (await request('POST', create)).json();
+  const owner = { version: 1, pid: 42, hostname: 'private-fixture-host', token: '00000000-0000-4000-8000-000000000001', createdAt: new Date().toISOString() };
+  const lock = path.join(root, '.agent-lanes', '.write.lock');
+  await writeFile(lock, JSON.stringify(owner));
+  const response = await request('PATCH', { repository: 'repo-1', expectedUpdatedAt: task.updatedAt, task: { id: 'fix', summary: 'Must stay unsaved' } });
+  assert.equal(response.status, 423);
+  const text = await response.text();
+  assert.match(text, /busy in another process/);
+  assert.equal(text.includes(owner.hostname), false); assert.equal(text.includes(owner.token), false);
+  assert.equal(JSON.parse(await readFile(path.join(root, '.agent-lanes', 'fix.json'), 'utf8')).summary, '');
+  assert.deepEqual(JSON.parse(await readFile(lock, 'utf8')), owner);
+});
