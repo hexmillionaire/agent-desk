@@ -70,7 +70,9 @@ export function createDesk({ repositories = [], demo = false, readOnly = false }
     const port = server.address()?.port;
     const allowedHosts = [`127.0.0.1:${port}`, `localhost:${port}`];
     const origin = req.headers.origin;
-    const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'" };
+    // CORP/COOP stop other local pages from embedding responses or holding a
+    // window reference; form-action/object-src are not covered by default-src.
+    const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Cross-Origin-Resource-Policy': 'same-origin', 'Cross-Origin-Opener-Policy': 'same-origin', 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; object-src 'none'; form-action 'none'; frame-ancestors 'none'; base-uri 'none'" };
     function send(status, body, type = 'application/json; charset=utf-8') { res.writeHead(status, { ...headers, 'Content-Type': type }); res.end(body); }
     if (!allowedHosts.includes(req.headers.host) || (origin && !allowedHosts.some(host => origin === `http://${host}`)) || req.headers['sec-fetch-site'] === 'cross-site') return send(403, JSON.stringify({ error: 'Local origin required.' }));
     try {

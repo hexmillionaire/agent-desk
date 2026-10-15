@@ -52,6 +52,15 @@ test('handoffs, static assets, and missing tasks have correct response types', a
   const page = await fetch(url);
   assert.match(await page.text(), /Your work, in view/);
   assert.match(page.headers.get('content-security-policy'), /frame-ancestors 'none'/);
+  assert.match(page.headers.get('content-security-policy'), /form-action 'none'/);
+  assert.match(page.headers.get('content-security-policy'), /object-src 'none'/);
+  for (const response of [page, handoff]) {
+    assert.equal(response.headers.get('cross-origin-resource-policy'), 'same-origin');
+    assert.equal(response.headers.get('cross-origin-opener-policy'), 'same-origin');
+  }
+  const rejected = await fetch(`${url}/api/session`, { headers: { Origin: 'http://evil.example' } });
+  assert.equal(rejected.status, 403);
+  assert.equal(rejected.headers.get('cross-origin-resource-policy'), 'same-origin');
   assert.equal((await fetch(`${url}/src/server.mjs`)).status, 404);
 });
 
