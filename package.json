@@ -1,7 +1,7 @@
 {
   "name": "@hexmillionaire/agent-desk",
   "version": "0.4.0",
-  "description": "A private localhost dashboard for portable coding-agent task scopes and handoffs.",
+  "description": "Zero-dependency localhost dashboard for Agent Lanes: see AI coding-agent task scopes, out-of-scope Git changes, notes and copyable handoffs.",
   "type": "module",
   "bin": {
     "agent-desk": "bin/agent-desk.mjs"
@@ -29,15 +29,25 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hexmillionaire/agent-desk.git"
+    "url": "git+https://github.com/hexmillionaire/agent-desk.git"
+  },
+  "homepage": "https://github.com/hexmillionaire/agent-desk#readme",
+  "bugs": {
+    "url": "https://github.com/hexmillionaire/agent-desk/issues"
   },
   "license": "MIT",
   "keywords": [
-    "codex",
     "claude-code",
+    "codex",
+    "ai-agents",
+    "coding-agent",
     "dashboard",
+    "localhost",
     "git",
-    "handoff"
+    "scope",
+    "handoff",
+    "task-scope",
+    "agent-lanes"
   ],
   "publishConfig": {
     "access": "public"
