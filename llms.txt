@@ -1,0 +1,20 @@
+# Agent Desk
+
+> Zero-dependency localhost web dashboard over Agent Lanes task files. Shows each coding task's allowed scope, changed and out-of-scope Git paths, notes, and a copyable handoff. Binds to 127.0.0.1 only; writes are limited to task metadata and can be disabled with `--read-only`.
+
+Requires Node.js 24.8+ and Git. No accounts, telemetry, or model API calls.
+
+## Run
+
+- `npx --yes @hexmillionaire/agent-desk --demo`: labeled sample data, read-only
+- `agent-desk --repo /absolute/path/to/project [--repo ...]`: open http://127.0.0.1:4317
+- `agent-desk --config desk.json`: `{"repositories":[{"name":"My project","path":"/absolute/path"}]}`
+- Options: `--port <n>`, `--read-only`, `--version`, `--help`
+
+Tasks are created with the `agent-lanes` CLI or the dashboard's "New task" form. Agents should use the CLI or the read-only MCP server rather than this HTTP API.
+
+## Docs
+
+- [README](https://github.com/hexmillionaire/agent-desk#readme)
+- [Security model](https://github.com/hexmillionaire/agent-desk/blob/main/SECURITY.md)
+- [Agent Lanes CLI](https://github.com/hexmillionaire/Agent-Lanes) and [MCP server](https://github.com/hexmillionaire/agent-lanes-mcp)
