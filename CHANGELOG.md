@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Send `Cross-Origin-Resource-Policy` and `Cross-Origin-Opener-Policy`, and add `object-src 'none'` and `form-action 'none'` to the CSP.
+- Add `--version`; reject empty or malformed `--port` values and config entries without a `path` string.
+- Add `llms.txt` and npm `homepage`/`bugs` metadata.
+
 ## 0.4.0
 
 - Display saved allow/deny paths and the full captured base in task details.
