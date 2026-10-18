@@ -1,7 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.4.1
 
+- Update the vendored Agent Lanes core to 0.4.1: deny patterns now also match hidden files and directories.
 - Send `Cross-Origin-Resource-Policy` and `Cross-Origin-Opener-Policy`, and add `object-src 'none'` and `form-action 'none'` to the CSP.
 - Add `--version`; reject empty or malformed `--port` values and config entries without a `path` string.
 - Add `llms.txt` and npm `homepage`/`bugs` metadata.
