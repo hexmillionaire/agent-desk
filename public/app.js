@@ -155,6 +155,7 @@ function renderDetailAudit(item) {
   for (const file of item.changes) { const row = el('div', 'file-row'); row.append(el('span', `file-verdict${file.verdict === 'allowed' ? '' : ' alert'}`, file.verdict.toUpperCase()), el('span', '', `${file.status} ${file.path}`)); $('detail-files').append(row); }
   if (!item.changes.length) $('detail-files').append(el('p', '', 'No net file changes since the task base.'));
   if (item.conflicts.length || item.submodules.length) $('detail-files').append(el('p', '', 'Conflicts or submodules need a separate review.'));
+  if (item.ignored?.length) $('detail-files').append(el('p', '', `Ignored by repository rules, not audited: ${item.ignored.join(', ')}`));
   $('detail-next').textContent = item.task.next || 'No next step recorded.';
 }
 function openDetail(item, { updating = false } = {}) {
