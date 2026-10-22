@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Security: the dogfood policy denies `.github/workflows/**` in every lane. GitHub runs a `pull_request` workflow from the PR head, so a lane that may edit workflow files can rewrite the scope check that gates it and still report green.
+- The scope workflow pins the Agent Lanes action to the 0.4.1 release commit instead of a 0.2.0 commit that predates the hidden-file deny fix.
+- Security: re-vendor the Agent Lanes core from the `security/audit-fixes` branch: deny patterns also match case-folded, NFC-normalised paths; local audits ignore the global Git excludes file and report entries hidden by repository ignore rules in a new `ignored` field; `parseRawDiff` is exported.
+- Task details list entries ignored by repository rules below the audited changes.
+
 ## 0.4.1
 
 - Update the vendored Agent Lanes core to 0.4.1: deny patterns now also match hidden files and directories.
