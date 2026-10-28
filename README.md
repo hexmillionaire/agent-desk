@@ -10,7 +10,7 @@ Works with task files created by [Agent Lanes](https://github.com/hexmillionaire
 
 ## Install the current release
 
-Requires Node.js 24.8+ and Git. [Version 0.4.2](https://www.npmjs.com/package/@hexmillionaire/agent-desk), published October 17, 2026.
+Requires Node.js 24.8+ and Git. [Version 0.4.2](https://www.npmjs.com/package/@hexmillionaire/agent-desk).
 
 ```sh
 npm install -g @hexmillionaire/agent-desk@0.4.2
