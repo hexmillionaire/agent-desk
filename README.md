@@ -6,11 +6,11 @@ Works with task files created by [Agent Lanes](https://github.com/hexmillionaire
 
 ![Agent Desk showing explicitly labeled sample tasks](docs/preview.png)
 
-![Reviewing a fictional concurrent note conflict in version 0.4.2](docs/conflict-review.png)
+![Reviewing a fictional concurrent note conflict](docs/conflict-review.png)
 
 ## Install the current release
 
-Requires Node.js 24.8+ and Git. [Version 0.4.2](https://www.npmjs.com/package/@hexmillionaire/agent-desk), published October 17, 2026.
+Requires Node.js 24.8+ and Git. [Version 0.4.2](https://www.npmjs.com/package/@hexmillionaire/agent-desk).
 
 ```sh
 npm install -g @hexmillionaire/agent-desk@0.4.2
