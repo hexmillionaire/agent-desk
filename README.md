@@ -6,21 +6,21 @@ Works with task files created by [Agent Lanes](https://github.com/hexmillionaire
 
 ![Agent Desk showing explicitly labeled sample tasks](docs/preview.png)
 
-![Reviewing a fictional concurrent note conflict in version 0.4.1](docs/conflict-review.png)
+![Reviewing a fictional concurrent note conflict in version 0.4.2](docs/conflict-review.png)
 
 ## Install the current release
 
-Requires Node.js 24.8+ and Git. [Version 0.4.1 is on npm](https://www.npmjs.com/package/@hexmillionaire/agent-desk), published October 17, 2026.
+Requires Node.js 24.8+ and Git. [Version 0.4.2](https://www.npmjs.com/package/@hexmillionaire/agent-desk), published October 17, 2026.
 
 ```sh
-npm install -g @hexmillionaire/agent-desk@0.4.1
+npm install -g @hexmillionaire/agent-desk@0.4.2
 agent-desk --repo /absolute/path/to/project
 ```
 
-For a quick demo, use `npx --yes @hexmillionaire/agent-desk@0.4.1 --demo`. The versioned GitHub release archive remains an alternative:
+For a quick demo, use `npx --yes @hexmillionaire/agent-desk@0.4.2 --demo`. The versioned GitHub release archive remains an alternative:
 
 ```sh
-npm install -g https://github.com/hexmillionaire/agent-desk/releases/download/v0.4.1/hexmillionaire-agent-desk-0.4.1.tgz
+npm install -g https://github.com/hexmillionaire/agent-desk/releases/download/v0.4.2/hexmillionaire-agent-desk-0.4.2.tgz
 ```
 
 Open `http://127.0.0.1:4317`. Use `agent-desk --demo` to try the labeled sample tasks. The [connected quickstart](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/QUICKSTART.md) walks through all three tools.
@@ -73,15 +73,15 @@ Copying a handoff requires clipboard permission in your browser. The report cont
 
 ## Development
 
-Run `npm test`. The UI uses browser-native JavaScript and CSS with no build step. The engine is an unchanged MIT-licensed Agent Lanes 0.4.1 core and template reader snapshot; [its source and hash](vendor/README.md) are recorded. Vendoring keeps archives and clones independent of npm availability. See the [connected quickstart](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/QUICKSTART.md) and [demo](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/DEMO.md).
+Run `npm test`. The UI uses browser-native JavaScript and CSS with no build step. The engine is an unchanged MIT-licensed Agent Lanes 0.4.2 core and template reader snapshot; [its source and hash](vendor/README.md) are recorded. Vendoring keeps archives and clones independent of npm availability. See the [connected quickstart](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/QUICKSTART.md) and [demo](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/DEMO.md).
 
 Related: [Agent Lanes MCP](https://github.com/hexmillionaire/agent-lanes-mcp).
 
 ## Performance and reliability review
 
-See the [October 2026 investigation](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/INVESTIGATION.md) for measured results, language/runtime decisions, limitations, and the next improvements. Use the latest Node 24 LTS patch; Node 24.8 is the tested minimum.
+See the [October 2026 investigation](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/INVESTIGATION.md) for measured results, language/runtime decisions, limitations, and the next improvements. Use the latest patched Node 26 LTS for a new installation, or patched Node 24 Maintenance LTS; Node 24.8 remains the minimum. See the [Node release schedule](https://github.com/nodejs/Release#release-schedule).
 
-Task creation requires a filesystem with hard-link support (such as NTFS, APFS, or ext4). The 0.4.1 core coordinates participating writers across processes and checks note revisions inside the lock. Upgrade Agent Lanes writers too. Older clients and manual edits do not participate. See [coordination and explicit crash recovery](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/COORDINATION.md).
+Task creation requires a filesystem with hard-link support (such as NTFS, APFS, or ext4). The 0.4.2 core coordinates participating writers across processes and checks note revisions inside the lock. Upgrade Agent Lanes writers too. Older clients and manual edits do not participate. See [coordination and explicit crash recovery](https://github.com/hexmillionaire/Agent-Lanes/blob/main/docs/COORDINATION.md).
 
 ## Saved scope and templates
 
