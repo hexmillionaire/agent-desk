@@ -1,6 +1,6 @@
 {
   "name": "@hexmillionaire/agent-desk",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Zero-dependency localhost dashboard for Agent Lanes: see AI coding-agent task scopes, out-of-scope Git changes, notes and copyable handoffs.",
   "type": "module",
   "bin": {
