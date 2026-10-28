@@ -6,7 +6,7 @@ Works with task files created by [Agent Lanes](https://github.com/hexmillionaire
 
 ![Agent Desk showing explicitly labeled sample tasks](docs/preview.png)
 
-![Reviewing a fictional concurrent note conflict in version 0.4.2](docs/conflict-review.png)
+![Reviewing a fictional concurrent note conflict](docs/conflict-review.png)
 
 ## Install the current release
 
