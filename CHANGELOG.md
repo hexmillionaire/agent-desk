@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Releases publish from `.github/workflows/publish.yml` on a version tag, using npm trusted publishing (OIDC, no stored token) with a provenance attestation.
+
 ## 0.4.2 — 2026-10-28
 
 - Vendor the 0.4.2 shared core with bounded task reads, strict UTF-8 decoding and observed file-change checks.
